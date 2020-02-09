@@ -28,7 +28,9 @@ type KubeBook = Object<serde_json::Value, serde_json::Value>;
 
 fn main()  {
     // Load the kubeconfig file.
-    let kubeconfig = config::load_kube_config().expect("kubeconfig failed to load");
+    let kubeconfig = config::load_kube_config()
+        .or_else(|_| config::incluster_config())
+        .expect("kubeconfig failed to load");
     
     // Create a new client
     let client = APIClient::new(kubeconfig);
@@ -63,15 +65,15 @@ fn handle(event: WatchEvent<KubeBook>) {
     match event {
         WatchEvent::Added(book) => {     
             println!("Added a book {}", book.metadata.name);
-            updateDB(book,"/register".to_string());
+            update_db(book,"/register".to_string());
         },
         WatchEvent::Deleted(book) => {
             println!("Deleted a book {}", book.metadata.name);
-            updateDB(book,"/deregister".to_string());
+            update_db(book,"/deregister".to_string());
         },
         WatchEvent::Modified(book) =>{
             println!("modified a book {}", book.metadata.name);
-            updateDB(book,"/register".to_string());
+            update_db(book,"/register".to_string());
         },
         _ => {
             println!("another event");
@@ -79,10 +81,10 @@ fn handle(event: WatchEvent<KubeBook>) {
     }
 }
 
-fn updateDB(book: KubeBook,updateType: String){
+fn update_db(book: KubeBook,update_type: String){
     //"https://en600nj5ohlgq.x.pipedream.net"
     let mut uri:String  = env::var("webhook").unwrap().to_string();
-    uri.push_str(&updateType);
+    uri.push_str(&update_type);
     let resp = ureq::post(&uri)
     .set("Content-Type", "application/json")
     .set("update-type","added")
