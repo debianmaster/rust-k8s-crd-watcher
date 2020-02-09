@@ -24,8 +24,6 @@ pub struct Book {
 // This is a convenience alias that describes the object we get from Kubernetes
 type KubeBook = Object<serde_json::Value, serde_json::Value>;
 
-
-
 fn main()  {
     // Load the kubeconfig file.
     let kubeconfig = config::load_kube_config()
@@ -80,7 +78,6 @@ fn handle(event: WatchEvent<KubeBook>) {
         },
     }
 }
-
 fn update_db(book: KubeBook,update_type: String){
     //"https://en600nj5ohlgq.x.pipedream.net"
     let mut uri:String  = env::var("webhook").unwrap().to_string();
